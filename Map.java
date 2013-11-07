@@ -4,13 +4,25 @@ import org.w3c.dom.*;
 public class Map{
 	public HashMap<String,Room> rooms;
 	private HashMap<String, Container> containers;
+	private HashMap<String, Creature> creatures;
 	private List<Item> items;
-	private List<Creature> creatures;
 	Map(){
 		rooms = new LinkedHashMap<String,Room>();
 		containers = new LinkedHashMap<String,Container>();
 		items = new ArrayList<Item>();
-		creatures = new ArrayList<Creature>();
+		creatures = new LinkedHashMap<String, Creature>();
+	}
+	public void setItemStatus(String it, String s){
+		for (int i = 0 ; i < items.size() ; i++){
+			if(items.get(i).getName() == null) continue;
+			if(items.get(i).getName().equals(it)){
+				items.get(i).setStatus(s);
+				return;
+			}
+		}
+	}
+	public void setContainerStatus(String c, String s){
+		containers.get(c).setStatus(s);
 	}
 	public void addItemToContainer(String i, String c){
 		this.containers.get(c).addItem(i);
@@ -18,6 +30,10 @@ public class Map{
 	public void openContainer(String cName){
 		//this.containers.get(cName).emptyContainer();
 		this.containers.get(cName).isOpen = true;
+	}
+	public Creature getCreatureByName(String cName) { 
+		if(! this.creatures.containsKey(cName)) return null;
+		return this.creatures.get(cName);
 	}
 	public Container getContainerByName(String cName) { 
 		if(! this.containers.containsKey(cName)) return null;
@@ -54,7 +70,7 @@ public class Map{
         	NodeList cr = ele.getElementsByTagName("creature");
         	for(int j = 0; j < cr.getLength(); j++){
 				Creature creature = new Creature();
-        		//creatures.add(creature.buildCreature(cr.item(j)));
+        		creatures.put(creature.buildCreature(cr.item(j)).getName(), creature);
         	}
         	
         }

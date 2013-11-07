@@ -7,7 +7,7 @@ import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
 import com.sun.org.apache.xerces.internal.parsers.DOMParser;
-import com.sun.xml.internal.bind.v2.runtime.reflect.ListIterator;
+//import com.sun.xml.internal.bind.v2.runtime.reflect.ListIterator;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.DocumentBuilder;
@@ -77,7 +77,7 @@ public class Zork {
 				if(!(command = in.nextLine()).equals("y")) {
 					continue;
 				}
-        		break;
+        		break; //breaks the main loop so we can clean up
         	}else{
         		System.out.println("Command <"+command+"> not recognized");
         	}
@@ -96,28 +96,6 @@ public class Zork {
 		}
 		//currRoom.getItem(i).turnOn(); //idk what im doing lol
 		System.out.println("IMPLEMENT TURN ON");
-	}
-	private static void putItem(String i, String c){
-		if(!inventory.contains(i)){
-			System.out.println("Item <"+i+"> not in inventory");
-			return;
-		}
-		if(map.getContainerByName(c) == null){
-			System.out.println("Container <"+c+"> not in room");
-			return;
-		}
-		if(! map.getContainerByName(c).isOpen){
-			System.out.println("Container <"+c+"> is closed");
-			return;
-		}
-		if(map.getContainerByName(c).getAcceptList().size() > 0 
-				&& ! map.getContainerByName(c).getAcceptList().contains(i))
-		{
-			System.out.println("Container <"+c+"> does not accept <"+i+">");
-			return;
-		}
-		inventory.remove(i);
-		map.addItemToContainer(i, c);
 	}
 	private static void open (String target) throws SAXException, JAXBException{
 		if(target.equals("exit")){
@@ -169,6 +147,16 @@ public class Zork {
 				else System.out.println("closed");
 			}
 		}
+			for(String creatName : currRoom.getCreatures()){
+				Creature creat = map.getCreatureByName(creatName);
+				if(creat == null) continue;
+				System.out.print(creat.getName());
+				if(!strIsNullorEmpty(creat.getDescription())) 
+					System.out.print(": "+creat.getDescription()+" ");
+				if(!strIsNullorEmpty(creat.getStatus())) 
+					System.out.println("status > "+creat.getStatus());
+			}
+		
 	}
 	private static void take(String iName){
 		if(currRoom.getItemList().contains(iName)){
@@ -211,12 +199,135 @@ public class Zork {
 			System.out.println(currItem.getWriting());
 		}
 	}
+	private static void action(String action){
+		String[] aSplit = action.split(" ");
+		if(aSplit[0].equals("Add")){
+			if(aSplit.length < 4) return;
+			String obj = aSplit[1];
+			String dest = aSplit[3];
+			if(map.getContainerByName(dest)!=null){
+				map.addItemToContainer(obj, dest);
+			} else if(currRoom.getName().equals(dest)){
+				currRoom.addItem(obj);
+			} else if(dest.equals("inventory")){
+				inventory.add(obj);
+			}
+		}else if(aSplit[0].equals("Update")){
+			if(aSplit.length < 4) return;
+			String obj = aSplit[1];
+			String status = aSplit[3];
+			if(map.getItemByName(obj) != null){
+				map.setItemStatus(obj, status);
+			}else if(map.getContainerByName(obj) != null){
+				map.setContainerStatus(obj, status);
+			}else if(currRoom.getName().equals(obj)){
+				currRoom.setStatus(status);
+			}
+		}else if(aSplit[0].equals("Delete")){
+			if(aSplit.length < 2) return;
+			String obj = aSplit[1];
+			System.out.println("IMPLEMENT DELETE");
+		}else if(action.equals("Game Over")){
+			System.out.println("Game Over");
+			System.exit(0);
+		}
+	}
+	private static void putItem(String i, String c){
+		if(!inventory.contains("key")) inventory.add("key"); //delete this
+		if(!inventory.contains(i)){
+			System.out.println("Item <"+i+"> not in inventory");
+			return;
+		}
+		for(Trigger trig : map.getContainerByName(c).getTriggers()){
+			Condition cond = trig.getCondition();
+			if(cond == null){ 
+				System.out.println(trig.getPrint());
+				return;
+			}
+			if(!strIsNullorEmpty( cond.getStatus()) ){
+				//status
+				if(currRoom.getStatus().equals("locked")){
+					System.out.println(trig.getPrint());
+					return;
+				}
+			} else{
+				//owner
+				Container cont = map.getContainerByName(c);
+				if(trig.getCondition().getHas().equals("yes")
+						&& trig.getCondition().getObject().equals(i)
+						&& trig.getCondition().getOwner().equals(c)){
+					System.out.println(trig.getPrint());
+					action(trig.getAction());
+					map.openContainer(c);
+				}
+			}
+		} //end for
+		if(map.getContainerByName(c) == null){
+			System.out.println("Container <"+c+"> not in room");
+			return;
+		}
+		if(! map.getContainerByName(c).isOpen){
+			System.out.println("Container <"+c+"> is closed");
+			return;
+		}
+		if(map.getContainerByName(c).getAcceptList().size() > 0 
+				&& ! map.getContainerByName(c).getAcceptList().contains(i))
+		{
+			System.out.println("Container <"+c+"> does not accept <"+i+">");
+			return;
+		}
+		inventory.remove(i);
+		map.addItemToContainer(i, c);
+	}
 	private static void moveTo(String command){
 		Border b = currRoom.getBorder(command);
 		if(b == null) {
 			System.out.println("No room in that direction!");
 		} else {
 			if(map.rooms.containsKey(b.getName())){
+				for(Trigger trig : currRoom.getTriggers()){
+					if(!trig.getCommand().equals(command)){ break; }
+					Condition cond = trig.getCondition();
+					if(cond != null){
+						if(!strIsNullorEmpty( cond.getStatus()) ){
+							//status
+							if(currRoom.getContainers().contains(cond.getObject())){
+								if(!map.getContainerByName(cond.getObject()).isOpen){
+									System.out.println(trig.getPrint());
+									return;
+								}
+							}
+						} else{
+							//owner
+							if(cond.getOwner().equals("inventory")){
+								if(cond.getHas().equals("no")){
+									if(!inventory.contains(cond.getObject())){
+										//stay in room
+										System.out.println(trig.getPrint());
+										return;
+									}
+								}
+							} else {
+								Container cont = map.getContainerByName(cond.getStatus());
+								if(cond.getHas().equals("no")){
+									/*//not sure if this will ever be a condition
+									if(){
+										//stay in room
+										System.out.println(trig.getPrint());
+										return;
+									} else{
+										//move
+									}
+									*/
+								}
+							}
+						}
+					}else{ //shouldn't happen
+						System.out.println(trig.getPrint());
+						return;
+					}
+					
+				}
 				currRoom = map.rooms.get(b.getName());
 			}
 		}

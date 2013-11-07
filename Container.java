@@ -13,7 +13,11 @@ public class Container {
 	private List<String> items;
 	private List<Trigger> triggers;
 	public boolean isOpen;
-	
+
+	public void updateStatus(String s) {this.status = s;}
+	public List<Trigger> getTriggers(){
+		return this.triggers;
+	}
 	public List<String> getAcceptList(){
 		return this.accept;
 	}
@@ -28,7 +32,7 @@ public class Container {
 	public Container() {
 		items = new ArrayList<String>();
 		accept = new ArrayList<String>();
-		
+		triggers = new ArrayList<Trigger>();
 		isOpen = false;
 	}
 	public Container buildContainer(Node n_in) {
@@ -59,13 +63,14 @@ public class Container {
     		}
 
     		NodeList trig = (ele).getElementsByTagName("trigger");
-/*
-    		if(trig.getLength() > 0)
-    			this.triggers.add(new Trigger(trig));
-*/
+    		for (int i = 0; i < trig.getLength(); i++){
+    			Trigger t =  new Trigger(trig.item(i));
+    			this.triggers.add( t);
+    		}
 		return this;
 	}
 	public String getName() {return this.name;}
 	public String getDescription(){ return this.description;}
 	public String getStatus() {return this.status;}
+	public void setStatus(String s) { this.status = s;}
 }

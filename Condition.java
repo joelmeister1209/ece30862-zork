@@ -7,6 +7,12 @@ public class Condition {
 	String object;
 	String owner;
 	String status;
+
+	public String getHas() {return this.has;}
+	public String getObject() {return this.object;}
+	public String getOwner() {return this.owner;}
+	public String getStatus() {return this.status;}
+	public void setStatus(String s) {this.status = s;}
 	public Condition(){
 		
 	}

@@ -29,6 +29,8 @@ public class Item {
 			this.writing = ((Element)wr.item(0)).getTextContent();
 		return this;
 	}
+	public String getStatus() { return this.status; }
+	public void setStatus(String s) { this.status = s; }
 	public String getName() { return this.name; }
 	public String getWriting() { return this.writing; }
 	

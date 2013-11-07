@@ -13,12 +13,18 @@ public class Room {
 	private List<String> items; //just has item names
 	private List<String> creatures;
 	private List<Trigger> triggers;
-	
+
+	public List<Trigger> getTriggers(){
+		return this.triggers;
+	}
 	public List<String> getItemList(){
 		return this.items;
 	}
 	public List<String> getContainers(){
 		return this.containers;
+	}
+	public List<String> getCreatures(){
+		return this.creatures;
 	}
 	public void addItem(String i){
 		this.items.add(i);
@@ -66,7 +72,11 @@ public class Room {
 		}
 		NodeList trig = ((Element)n_in).getElementsByTagName("trigger");
 		for (int i = 0; i < trig.getLength(); i++){
-			this.triggers.add( new Trigger(trig.item(i)) );
+			Trigger t =  new Trigger(trig.item(i));
+			this.triggers.add( t);
+			if(t.getCondition() != null){
+				this.status = t.getCondition().getStatus();
+			}
 		}
 
 		return this;
