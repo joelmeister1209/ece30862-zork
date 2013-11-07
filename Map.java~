@@ -1,0 +1,54 @@
+import java.util.ArrayList;
+import java.util.List;
+import org.w3c.dom.*;
+
+public class Map{
+	private List<Room> rooms;
+	private List<Item> items;
+	private List<Container> containers;
+	private List<Creature> creatures;
+	Map(){
+		rooms = new ArrayList<Room>();
+		items = new ArrayList<Item>();
+		containers = new ArrayList<Container>();
+		creatures = new ArrayList<Creature>();
+	}
+	public List<Room> getRooms() { return this.rooms; }
+	public Item getItemByName(String iName) { 
+		Item curr = new Item();
+		for (int i = 0 ; i < items.size() ; i++){
+			if(items.get(i).getName() == null) continue;
+			if(items.get(i).getName().equals(iName)){
+				return items.get(i);
+			}
+		}
+		return null; 
+	}
+	public Map buildMap(NodeList map){
+        for(int i = 0; i < map.getLength() ; i++){
+        	Element ele = (Element) map.item(i);
+        	NodeList ro = ele.getElementsByTagName("room");
+        	for(int j = 0; j < ro.getLength(); j++){
+        		Room r = new Room();
+        		rooms.add(r.buildRoom(ro.item(j)));
+        	}
+        	NodeList it = ele.getElementsByTagName("item");
+        	for(int j = 0; j < it.getLength(); j++){
+				Item item = new Item();
+        		items.add(item.buildItem(it.item(j)));
+        	}
+        	NodeList cn = ele.getElementsByTagName("container");
+        	for(int j = 0; j < cn.getLength(); j++){
+			Container cont = new Container();
+        		//containers.add(cont.buildContainer(cn.item(j)));
+        	}
+        	NodeList cr = ele.getElementsByTagName("creature");
+        	for(int j = 0; j < cr.getLength(); j++){
+				Creature creature = new Creature();
+        		//creatures.add(creature.buildCreature(cr.item(j)));
+        	}
+        	
+        }
+        return this;
+	}
+}
